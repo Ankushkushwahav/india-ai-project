@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INDIA AI · भारत संप्रभु बुद्धिमत्ता</title>
+<style>
+:root{
+  --saffron:#ff9933;--cyan:#00e5ff;--chakra:#0066ff;--green:#25d366;
+  --bg:#02050d;--panel:rgba(8,16,32,0.92);--line:rgba(255,153,51,0.25);
+  --text:#e8f4ff;--danger:#ff3b53;--font-mono:monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:"Segoe UI",sans-serif}
+body{display:flex;flex-direction:column;position:relative}
+
+/* 📷 HUD FACE AUTHENTICATION SCREEN */
+#auth-overlay{
+  position:fixed;inset:0;background:#000;z-index:200;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+.scan-bracket{
+  width:160px;height:160px;border:2px dashed var(--saffron);border-radius:24px;
+  position:relative;display:flex;align-items:center;justify-content:center;
+}
+.scan-line{
+  position:absolute;width:100%;height:3px;background:var(--saffron);
+  box-shadow:0 0 12px var(--saffron);animation:scanMove 1.8s infinite alternate;
+}
+.auth-status{font-family:var(--font-mono);font-size:14px;letter-spacing:1px;color:var(--saffron)}
+.auth-cam{position:absolute;width:140px;height:140px;border-radius:18px;object-fit:cover;transform:scaleX(-1)}
+
+/* 🌌 INDIA AI CORE CANVAS */
+#canvas-stage{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
+#camera-bg{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;transform:scaleX(-1);display:none;opacity:0.25}
+
+/* TOPBAR */
+.topbar{
+  position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:rgba(2,5,13,0.9);border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-dot{width:10px;height:10px;border-radius:50%;background:var(--saffron);box-shadow:0 0 10px var(--saffron);animation:pulse 2s infinite}
+.brand h1{font-size:18px;font-weight:900;letter-spacing:2px;background:linear-gradient(90deg,var(--saffron),#fff,var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-actions{display:flex;align-items:center;gap:6px}
+.btn-ui{background:#111c2e;color:var(--saffron);border:1px solid var(--line);padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+
+/* 🌊 SIRI / INDIA AI AUDIO WAVEFORM */
+#wave-box{
+  position:fixed;top:45%;left:50%;transform:translate(-50%,-50%);z-index:5;
+  display:none;flex-direction:column;align-items:center;gap:12px;
+}
+.wave-bars{display:flex;align-items:center;gap:6px;height:50px}
+.w-bar{width:5px;border-radius:10px;animation:waveJump 0.8s infinite ease-in-out}
+.w1{background:#ff9933;height:20px;animation-delay:0.1s}
+.w2{background:#00e5ff;height:45px;animation-delay:0.3s}
+.w3{background:#25d366;height:35px;animation-delay:0.2s}
+.w4{background:#ff3b53;height:25px;animation-delay:0.4s}
+.wave-text{font-size:13px;font-family:var(--font-mono);letter-spacing:2px;color:#fff}
+
+/* CHAT FEED */
+.chat-container{
+  flex:1;min-height:0;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;z-index:3;
+}
+.msg{max-width:88%;padding:10px 14px;font-size:13.5px;line-height:1.6;border-radius:10px;word-break:break-word;backdrop-filter:blur(8px)}
+.msg.ai{align-self:flex-start;background:var(--panel);border-left:3px solid var(--saffron);border:1px solid var(--line)}
+.msg.ai::before{content:"◤ INDIA AI // संप्रभु बुद्धिमत्ता";display:block;font-size:9px;color:var(--saffron);margin-bottom:4px;font-family:var(--font-mono)}
+.msg.user{align-self:flex-end;background:rgba(255,153,51,0.25);border:1px solid rgba(255,153,51,0.4)}
+
+/* WIDGETS (NOTEPAD & YOUTUBE) */
+.widget-box{width:100%;border-radius:10px;background:#050d1a;border:1px solid var(--line);padding:10px;margin-top:8px}
+.notepad-area{width:100%;height:120px;background:#030712;color:#ffb366;border:1px solid #2a1f14;border-radius:6px;padding:8px;font-family:var(--font-mono);font-size:12px;outline:none}
+.yt-frame{width:100%;height:200px;border-radius:8px;border:none;margin-top:6px}
+
+/* SLIDING HISTORY DRAWER */
+#history-drawer{
+  position:fixed;top:0;left:0;width:280px;height:100%;background:rgba(5,11,22,0.98);
+  border-right:1px solid var(--line);z-index:150;transform:translateX(-100%);transition:.3s ease;padding:16px;display:flex;flex-direction:column;gap:10px;
+}
+#history-drawer.open{transform:translateX(0)}
+.h-title{font-size:15px;color:var(--saffron);font-weight:bold;border-bottom:1px solid var(--line);padding-bottom:8px}
+.history-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.h-item{background:#1a140d;padding:8px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+
+/* BOTTOM DOCK */
+.bottom-dock{width:100%;z-index:20;padding:8px 10px;background:rgba(2,5,13,0.96);border-top:1px solid var(--line);flex-shrink:0}
+.inputbar{
+  display:flex;align-items:center;gap:6px;background:#081224;border:1px solid var(--saffron);
+  border-radius:28px;padding:4px 8px;
+}
+.inputbar input{flex:1;background:transparent;border:none;outline:none;color:#fff;padding:8px;font-size:14px}
+.inputbar button{
+  width:36px;height:36px;border-radius:50%;background:#111c2e;border:1px solid var(--line);
+  color:var(--saffron);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:15px;
+}
+.inputbar button.mic.on{background:var(--danger);color:#fff;animation:pulse 1s infinite}
+.inputbar button.btn-send{background:var(--saffron);color:#000;font-weight:bold;width:auto;padding:0 14px;border-radius:20px}
+
+@keyframes scanMove{0%{top:4px}100%{top:94%}}
+@keyframes waveJump{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1.3)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+
+<!-- 📷 FACE AUTHENTICATION SCREEN -->
+<div id="auth-overlay">
+  <div class="scan-bracket">
+    <video id="auth-cam" class="auth-cam" autoplay playsinline muted></video>
+    <div class="scan-line"></div>
+  </div>
+  <div class="auth-status" id="auth-text">INDIA AI · बायोमेट्रिक सत्यापन प्रारंभ...</div>
+</div>
+
+<video id="camera-bg" autoplay playsinline muted></video>
+<canvas id="canvas-stage"></canvas>
+
+<!-- 🌊 INDIA AI AUDIO WAVEFORM -->
+<div id="wave-box">
+  <div class="wave-bars">
+    <div class="w-bar w1"></div>
+    <div class="w-bar w2"></div>
+    <div class="w-bar w3"></div>
+    <div class="w-bar w4"></div>
+  </div>
+  <div class="wave-text" id="wave-status">INDIA AI सुन रहा है...</div>
+</div>
+
+<!-- 🗂 CHAT HISTORY DRAWER -->
+<div id="history-drawer">
+  <div class="h-title">INDIA AI · संवाद इतिहास</div>
+  <div class="history-list" id="history-items"></div>
+  <button class="btn-ui" id="close-history">✕ बंद करें</button>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <h1>INDIA AI</h1>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-ui" id="history-btn">💬 इतिहास</button>
+    <button class="btn-ui" id="cam-toggle">📷 HUD कैमरा</button>
+  </div>
+</header>
+
+<main class="chat-container" id="chat"></main>
+
+<footer class="bottom-dock">
+  <div class="inputbar">
+    <button id="mic-btn" class="mic">🎙</button>
+    <input id="chat-input" placeholder="पूछें या कहें: 'नोटपैड खोलो', 'यूट्यूब पर गाना चलाओ'..." autocomplete="off">
+    <button id="send-btn" class="btn-send">पूछें</button>
+  </div>
+</footer>
+
+<script>
+let userGroqKey = localStorage.getItem('indiai_groq_key') || '';
+let chatHistory = JSON.parse(localStorage.getItem('indiai_chat_history') || '[]');
+let isSpeaking = false;
+
+const chat = document.getElementById('chat');
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const micBtn = document.getElementById('mic-btn');
+const waveBox = document.getElementById('wave-box');
+const waveStatus = document.getElementById('wave-status');
+const historyDrawer = document.getElementById('history-drawer');
+const historyItems = document.getElementById('history-items');
+const camToggle = document.getElementById('cam-toggle');
+const cameraBg = document.getElementById('camera-bg');
+
+// 📷 1. FACE SCANNING SEQUENCE
+window.addEventListener('load', async () => {
+  const authCam = document.getElementById('auth-cam');
+  const authText = document.getElementById('auth-text');
+  const authOverlay = document.getElementById('auth-overlay');
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    authCam.srcObject = stream;
+    cameraBg.srcObject = stream;
+  } catch(e) {}
+
+  setTimeout(() => {
+    authText.textContent = "पहचान स्कैन की जा रही है...";
+    authText.style.color = "#ff9933";
+  }, 1200);
+
+  setTimeout(() => {
+    authText.textContent = "✓ फेस ऑथेंटिकेशन सफल";
+    authText.style.color = "#25d366";
+    speakIndiaAI("नमस्ते सर, मैं इंडिया एआई हूँ। बताइए मैं आपकी क्या सहायता कर सकता हूँ?");
+  }, 2600);
+
+  setTimeout(() => {
+    authOverlay.style.display = 'none';
+    appendMsg('ai', 'जय हिंद! INDIA AI तंत्र सक्रिय है। आप बोल सकते हैं या लिख सकते हैं।');
+  }, 4000);
+});
+
+// 🌌 2. 3D CORE HUD CANVAS
+const canvas = document.getElementById('canvas-stage');
+const ctx = canvas.getContext('2d');
+let w, h, angle = 0;
+function resizeCanvas() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const nodes = [];
+for (let i = 0; i < 40; i++) {
+  nodes.push({ phi: Math.acos(-1 + (2 * i) / 40), theta: Math.sqrt(40 * Math.PI) * i });
+}
+
+function renderHUD() {
+  ctx.clearRect(0, 0, w, h);
+  angle += isSpeaking ? 0.04 : 0.012;
+
+  const cx = w / 2;
+  const cy = h * 0.38;
+  const radius = isSpeaking ? 90 + Math.sin(angle * 8) * 8 : 75;
+
+  ctx.strokeStyle = isSpeaking ? '#ff3b53' : '#ff9933';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  nodes.forEach(n => {
+    const x = radius * Math.sin(n.phi) * Math.cos(n.theta + angle);
+    const y = radius * Math.cos(n.phi);
+    const z = radius * Math.sin(n.phi) * Math.sin(n.theta + angle);
+    const scale = 220 / (220 + z);
+    ctx.fillStyle = isSpeaking ? '#00e5ff' : '#25d366';
+    ctx.beginPath();
+    ctx.arc(cx + x * scale, cy + y * scale, 2.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  requestAnimationFrame(renderHUD);
+}
+renderHUD();
+
+// 🎙 3. VOICE ENGINE
+function speakIndiaAI(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text.replace(/[*#`_\-]/g, ''));
+  utt.lang = 'hi-IN';
+  utt.pitch = 1.0;
+  utt.rate = 1.0;
+
+  utt.onstart = () => {
+    isSpeaking = true;
+    waveBox.style.display = 'flex';
+    waveStatus.textContent = "INDIA AI बोल रहा है...";
+  };
+  utt.onend = () => {
+    isSpeaking = false;
+    waveBox.style.display = 'none';
+  };
+  window.speechSynthesis.speak(utt);
+}
+
+function appendMsg(sender, text, widgetHtml = null) {
+  const div = document.createElement('div');
+  div.className = `msg ${sender}`;
+  if (text) {
+    const t = document.createElement('div');
+    t.textContent = text;
+    div.appendChild(t);
+  }
+  if (widgetHtml) {
+    const w = document.createElement('div');
+    w.innerHTML = widgetHtml;
+    div.appendChild(w);
+  }
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+
+  chatHistory.push({ sender, text });
+  localStorage.setItem('indiai_chat_history', JSON.stringify(chatHistory.slice(-40)));
+  renderHistory();
+  return div;
+}
+
+// 🛠 COMMAND ACTIONS
+function handleIndiaAIActions(cmd) {
+  const lower = cmd.toLowerCase().trim();
+
+  // Notepad
+  if (lower.includes('notepad') || lower.includes('नोटपैड')) {
+    const notepadWidget = `
+      <div class="widget-box">
+        <div style="font-size:11px;color:var(--saffron);margin-bottom:4px">📝 INDIA AI नोटपैड</div>
+        <textarea class="notepad-area" placeholder="यहाँ अपने नोट्स लिखें..."></textarea>
+      </div>`;
+    appendMsg('ai', 'नोटपैड खोला जा रहा है...', notepadWidget);
+    speakIndiaAI('नोटपैड खोल दिया गया है');
+    return true;
+  }
+
+  // YouTube Stream
+  if (lower.includes('youtube') || lower.includes('play song') || lower.includes('गाना') || lower.includes('म्यूजिक')) {
+    const songName = encodeURIComponent(cmd.replace(/(play song on youtube|play song|on youtube|गाना बजाओ|गाना सुनाओ)/gi, '').trim() || 'trending hindi song');
+    const ytWidget = `
+      <div class="widget-box">
+        <div style="font-size:11px;color:var(--saffron);margin-bottom:4px">▶ INDIA AI यूट्यूब स्ट्रीम</div>
+        <iframe class="yt-frame" src="https://www.youtube.com/embed?listType=search&list=${songName}&autoplay=1" allow="autoplay"></iframe>
+      </div>`;
+    appendMsg('ai', 'यूट्यूब पर गाना शुरू किया जा रहा है...', ytWidget);
+    speakIndiaAI('यूट्यूब पर गाना चलाया जा रहा है');
+    return true;
+  }
+
+  // Unlock Devices
+  if (lower.includes('unlock') || lower.includes('अनलॉक')) {
+    appendMsg('ai', 'सभी कनेक्टेड डिवाइस और स्क्रीन अनलॉक कर दी गई हैं।');
+    speakIndiaAI('स्क्रीन और सभी डिवाइस अनलॉक हो गए हैं');
+    return true;
+  }
+
+  return false;
+}
+
+async function sendQuery(queryText) {
+  const q = queryText.trim();
+  if (!q) return;
+
+  appendMsg('user', q);
+  chatInput.value = '';
+
+  if (handleIndiaAIActions(q)) return;
+
+  const aiMsg = appendMsg('ai', 'विचार किया जा रहा है...');
+  try {
+    const formData = new FormData();
+    formData.append('prompt', q);
+    formData.append('lang', 'hi-IN');
+    formData.append('api_key', userGroqKey);
+
+    const res = await fetch('http://localhost:8000/api/chat', { method: 'POST', body: formData });
+    if (res.ok) {
+      const data = await res.json();
+      aiMsg.textContent = data.reply;
+      speakIndiaAI(data.reply);
+      return;
+    }
+  } catch(e) {}
+
+  aiMsg.textContent = "न्यूरल कोर से संपर्क नहीं हो सका। कृपया बैकएंड जाँचें।";
+}
+
+// 🎙 SPEECH RECOGNITION
+let recognition = null;
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechClass();
+  recognition.lang = 'hi-IN';
+  recognition.onstart = () => {
+    micBtn.classList.add('on');
+    waveBox.style.display = 'flex';
+    waveStatus.textContent = "INDIA AI सुन रहा है...";
+  };
+  recognition.onresult = (e) => sendQuery(e.results[0][0].transcript);
+  recognition.onend = () => {
+    micBtn.classList.remove('on');
+    if (!isSpeaking) waveBox.style.display = 'none';
+  };
+}
+micBtn.onclick = () => { if (recognition) recognition.start(); };
+
+sendBtn.onclick = () => sendQuery(chatInput.value);
+chatInput.onkeydown = (e) => { if (e.key === 'Enter') sendQuery(chatInput.value); };
+
+// 🗂 HISTORY DRAWER
+document.getElementById('history-btn').onclick = () => historyDrawer.classList.add('open');
+document.getElementById('close-history').onclick = () => historyDrawer.classList.remove('open');
+function renderHistory() {
+  historyItems.innerHTML = '';
+  chatHistory.slice(-15).reverse().forEach(h => {
+    const it = document.createElement('div');
+    it.className = 'h-item';
+    it.textContent = `${h.sender === 'user' ? '👤' : '🇮🇳'}: ${h.text.slice(0, 32)}...`;
+    historyItems.appendChild(it);
+  });
+}
+
+// HUD Camera Toggle
+camToggle.onclick = () => {
+  const isHidden = cameraBg.style.display === 'none' || !cameraBg.style.display;
+  cameraBg.style.display = isHidden ? 'block' : 'none';
+  camToggle.textContent = isHidden ? '⏹ कैमरा बंद' : '📷 HUD कैमरा';
+};
+</script>
+</body>
+</html>
